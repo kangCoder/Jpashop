@@ -1,23 +1,21 @@
 package jpabook.jpashop.domain;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 import jpabook.jpashop.domain.item.Item;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Table(name = "order_item")
-@Getter @Setter
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED) //-> 기본 생성자를 만들지 말라는 뜻
 public class OrderItem {
 
-    @Id @GeneratedValue
+    @Id
+    @GeneratedValue
     @Column(name = "order_item_id")
     private Long id;
 
@@ -31,4 +29,28 @@ public class OrderItem {
 
     private int orderPrice;
     private int count;
+
+    //protected OrderItem() {} -> JPA에서 엔티티에 protected 생성자는 생성자를 만들지 말라는 뜻과 같다.
+
+    //==생성 메서드==//
+    public static OrderItem createOrderItem(Item item, int orderPrice, int count) {
+        OrderItem orderItem = new OrderItem();
+        orderItem.setItem(item);
+        orderItem.setOrderPrice(orderPrice);
+        orderItem.setCount(count);
+
+        //orderItem을 생성할 때는 넘어오는 것만큼 재고를 까줘야 한다.
+        item.removeStock(count);
+        return orderItem;
+    }
+
+    //==비즈니스 로직==//
+    public void cancel() {
+        getItem().addStock(count);
+    }
+
+    //==조회 로직==//
+    public int getTotalPrice() {
+        return getOrderPrice() * getCount();
+    }
 }
